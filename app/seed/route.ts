@@ -32,15 +32,24 @@
 // async function seedInvoices() {
 //   await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
 
-//   await client.sql`
-//     CREATE TABLE IF NOT EXISTS invoices (
-//       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-//       customer_id UUID NOT NULL,
-//       amount INT NOT NULL,
-//       status VARCHAR(255) NOT NULL,
-//       date DATE NOT NULL
-//     );
-//   `;
+  // await client.sql`
+  //   CREATE TABLE IF NOT EXISTS invoices (
+  //     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  //     customer_id UUID NOT NULL,
+  //     amount INT NOT NULL,
+  //     status VARCHAR(255) NOT NULL CHECK (status IN ('pending', 'paid', 'overdue', 'canceled')),
+  //     date DATE NOT NULL,
+  //     created_at TIMESTAMP DEFAULT current_timestamp
+  //   );
+  //   CREATE TABLE IF NOT EXISTS invoice_status_logs (
+  //     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  //     invoice_id UUID NOT NULL,
+  //     old_status VARCHAR(255) NOT NULL,
+  //     new_status VARCHAR(255) NOT NULL,
+  //     changed_by VARCHAR(255) NOT NULL, -- User who changed the status
+  //     changed_at TIMESTAMP DEFAULT current_timestamp
+  //   );
+  // `;
 
 //   const insertedInvoices = await Promise.all(
 //     invoices.map(

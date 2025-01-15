@@ -28,6 +28,50 @@ export async function fetchRevenue() {
   }
 }
 
+export async function updateInvoiceStatus(id: string, newStatus: string, changedBy: string) {
+  const currentInvoice = await sql`
+    SELECT status FROM invoices WHERE id = ${id}
+  `;
+
+  const oldStatus = currentInvoice.rows[0].status;
+
+  await sql`
+    UPDATE invoices SET status = ${newStatus} WHERE id = ${id}
+  `;
+
+  await sql`
+    INSERT INTO invoice_status_logs (invoice_id, old_status, new_status, changed_by)
+    VALUES (${id}, ${oldStatus}, ${newStatus}, ${changedBy})
+  `;
+}
+
+export async function fetchInvoiceStatusLogs(id: string) {
+  const logs = await sql`
+    SELECT * FROM invoice_status_logs
+    WHERE invoice_id = ${id}
+    ORDER BY changed_at DESC
+  `;
+  return logs.rows;
+}
+
+export async function restoreInvoiceStatus(id: string, logId: string, changedBy: string) {
+  const log = await sql`
+    SELECT old_status FROM invoice_status_logs WHERE id = ${logId}
+  `;
+  const oldStatus = log.rows[0].old_status;
+
+  await sql`
+    UPDATE invoices SET status = ${oldStatus} WHERE id = ${id}
+  `;
+
+  // Create a log entry for the restore action
+  await sql`
+    INSERT INTO invoice_status_logs (invoice_id, old_status, new_status, changed_by)
+    VALUES (${id}, ${oldStatus}, ${oldStatus}, ${changedBy})
+  `;
+}
+
+
 export async function fetchLatestInvoices() {
   try {
     const data = await sql<LatestInvoiceRaw>`
@@ -84,10 +128,7 @@ export async function fetchCardData() {
 }
 
 const ITEMS_PER_PAGE = 6;
-export async function fetchFilteredInvoices(
-  query: string,
-  currentPage: number,
-) {
+export async function fetchFilteredInvoices(query: string, currentPage: number) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
@@ -96,7 +137,11 @@ export async function fetchFilteredInvoices(
         invoices.id,
         invoices.amount,
         invoices.date,
-        invoices.status,
+        CASE
+          WHEN invoices.status = 'pending' AND invoices.date < NOW() - INTERVAL '14 days'
+          THEN 'overdue'
+          ELSE invoices.status
+        END AS status,
         customers.name,
         customers.email,
         customers.image_url
