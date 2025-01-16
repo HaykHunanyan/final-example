@@ -23,6 +23,7 @@ const FormSchema = z.object({
 
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 const UpdateInvoice = FormSchema.omit({ date: true, id: true });
+const UpdateInvoiceStatus = FormSchema.omit({ date: true, id: true, amount:true, customerId:true });
 
 export type State = {
   errors?: {
@@ -77,6 +78,7 @@ export async function updateInvoice(
   prevState: State,
   formData: FormData,
 ) {
+  console.log(formData,'formData')
   const validatedFields = UpdateInvoice.safeParse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
@@ -97,6 +99,37 @@ export async function updateInvoice(
     await sql`
       UPDATE invoices
       SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+      WHERE id = ${id}
+    `;
+  } catch (error) {
+    return { message: 'Database Error: Failed to Update Invoice.' };
+  }
+
+  revalidatePath('/dashboard/invoices');
+  redirect('/dashboard/invoices');
+}
+
+
+export async function updateInvoiceStatus(
+  id: string,
+  prevState: State, // First argument for useActionState
+  formData: FormData, // Second argument (the payload)
+) {
+  const validatedFields = UpdateInvoiceStatus.safeParse({
+    status: formData.get('status'),
+  });
+  console.log(validatedFields.success,'!validatedFields.success')
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Update Invoice.',
+    };
+  }
+  const { status } = validatedFields.data;
+  try {
+    await sql`
+      UPDATE invoices
+      SET status = ${status}
       WHERE id = ${id}
     `;
   } catch (error) {

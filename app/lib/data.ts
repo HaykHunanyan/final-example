@@ -28,23 +28,6 @@ export async function fetchRevenue() {
   }
 }
 
-export async function updateInvoiceStatus(id: string, newStatus: string, changedBy: string) {
-  const currentInvoice = await sql`
-    SELECT status FROM invoices WHERE id = ${id}
-  `;
-
-  const oldStatus = currentInvoice.rows[0].status;
-
-  await sql`
-    UPDATE invoices SET status = ${newStatus} WHERE id = ${id}
-  `;
-
-  await sql`
-    INSERT INTO invoice_status_logs (invoice_id, old_status, new_status, changed_by)
-    VALUES (${id}, ${oldStatus}, ${newStatus}, ${changedBy})
-  `;
-}
-
 export async function fetchInvoiceStatusLogs(id: string) {
   const logs = await sql`
     SELECT * FROM invoice_status_logs
@@ -128,6 +111,7 @@ export async function fetchCardData() {
 }
 
 const ITEMS_PER_PAGE = 6;
+
 export async function fetchFilteredInvoices(query: string, currentPage: number) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
