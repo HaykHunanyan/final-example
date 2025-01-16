@@ -1,7 +1,7 @@
 'use client';
 
 import { useState,startTransition } from 'react';
-import { CheckIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, ClockIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { updateInvoiceStatus, State } from '@/app/lib/actions';
 import { useActionState } from 'react';
 
@@ -13,7 +13,8 @@ const InvoiceStatus = ({ id, currentStatus }: { id?: string; currentStatus: stri
     list:{
       paid: { text: 'Paid', icon: CheckIcon, iconClassDropdown:'bg-green-500 text-white hover:bg-green-600', parentClass:'bg-green-500 text-white hover:bg-green-600' },
       pending: { text: 'Pending', icon: ClockIcon, iconClassDropdown:'bg-yellow-500 text-black hover:bg-yellow-600', parentClass:'bg-yellow-500 text-black hover:bg-yellow-600' },
-      overdue: { text: 'Overdue', icon: ClockIcon, iconClassDropdown:'bg-red-500 text-white hover:bg-red-600', parentClass:'bg-red-500 text-white hover:bg-red-600' },
+      overdue: { text: 'Overdue', icon: ClockIcon, iconClassDropdown:'bg-yellow-200 text-black hover:bg-yellow-500', parentClass:'bg-yellow-200 text-black hover:bg-yellow-500' },
+      canceled: { text: 'Canceled', icon: XMarkIcon, iconClassDropdown:'bg-red-500 text-white hover:bg-red-600', parentClass:'bg-red-500 text-white hover:bg-red-600' },
     },
     forColumnStatusClass:'mr-2 h-5 w-5 text-gray-500 ml-1.5',
     forDropDownStatusClass:'px-3 py-1 transition-colors duration-300 flex justify-center'
@@ -26,6 +27,9 @@ const InvoiceStatus = ({ id, currentStatus }: { id?: string; currentStatus: stri
   const [state, formAction] = useActionState(updateInvoiceWithId,initialState);
   
   const handleStatusChange = (newStatus: string) => {
+    if(newStatus === 'overdue'){
+      newStatus = 'pending'
+    }
     const formData = new FormData();
     formData.set("status", newStatus);
     

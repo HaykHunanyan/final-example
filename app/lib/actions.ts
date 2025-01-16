@@ -15,7 +15,7 @@ const FormSchema = z.object({
   amount: z.coerce
     .number()
     .gt(0, { message: 'Please enter an amount greater than $0.' }),
-  status: z.enum(['pending', 'paid'], {
+  status: z.enum(['pending', 'paid', 'canceled'], {
     invalid_type_error: 'Please select an invoice status.',
   }),
   date: z.string(),
@@ -112,8 +112,8 @@ export async function updateInvoice(
 
 export async function updateInvoiceStatus(
   id: string,
-  prevState: State, // First argument for useActionState
-  formData: FormData, // Second argument (the payload)
+  prevState: State,
+  formData: FormData,
 ) {
   const validatedFields = UpdateInvoiceStatus.safeParse({
     status: formData.get('status'),
