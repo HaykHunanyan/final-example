@@ -112,11 +112,39 @@ export async function fetchCardData() {
 
 const ITEMS_PER_PAGE = 6;
 
-export async function fetchFilteredInvoices(query: string, currentPage: number) {
+export async function fetchFilteredInvoices(
+  query: string,
+  currentPage: number,
+  currentStatus: string
+) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
-    const invoices = await sql<InvoicesTable>`
+    let statusCondition = '';
+
+    if (currentStatus !== 'all') {
+      if (currentStatus === 'overdue') {
+        statusCondition = `
+          AND invoices.status = 'pending'
+          AND invoices.date < NOW() - INTERVAL '14 days'
+        `;
+      } else if (currentStatus === 'pending') {
+        statusCondition = `
+          AND (
+            invoices.status = 'pending'
+            AND (
+              invoices.date >= NOW() - INTERVAL '14 days'
+            )
+          )
+        `;
+      }else {
+        statusCondition = `
+          AND invoices.status = '${currentStatus}'
+        `;
+      }
+    }
+
+    const queryText = `
       SELECT
         invoices.id,
         invoices.amount,
@@ -131,19 +159,25 @@ export async function fetchFilteredInvoices(query: string, currentPage: number) 
         customers.image_url
       FROM invoices
       JOIN customers ON invoices.customer_id = customers.id
-      WHERE
-        customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`} OR
-        invoices.amount::text ILIKE ${`%${query}%`} OR
-        invoices.date::text ILIKE ${`%${query}%`} OR
-        invoices.status ILIKE ${`%${query}%`}
+      WHERE (
+        customers.name ILIKE $1 OR
+        customers.email ILIKE $1 OR
+        invoices.amount::text ILIKE $1 OR
+        invoices.date::text ILIKE $1 OR
+        invoices.status ILIKE $1
+      )
+      ${statusCondition} -- Add dynamic status condition
       ORDER BY invoices.date DESC
-      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+      LIMIT $2 OFFSET $3
     `;
 
-    return invoices.rows;
+    const values = [`%${query}%`, ITEMS_PER_PAGE, offset];
+
+    const result = await sql.query(queryText, values);
+
+    return result.rows;
   } catch (error) {
-    console.error('Database Error:', error);
+    console.error('Database Error:', error, { query, currentPage, currentStatus });
     throw new Error('Failed to fetch invoices.');
   }
 }

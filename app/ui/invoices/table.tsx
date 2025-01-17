@@ -3,18 +3,24 @@ import { UpdateInvoice, DeleteInvoice } from '@/app/ui/invoices/buttons';
 import { formatDateToLocal, formatCurrency } from '@/app/lib/utils';
 import { fetchFilteredInvoices } from '@/app/lib/data';
 import InvoiceStatus from '@/app/ui/invoices/status';
+import InvoiceTabs from '@/app/ui/invoices/status-tabs';
 
 export default async function InvoicesTable({
   query,
   currentPage,
+  currentStatus
 }: {
   query: string;
   currentPage: number;
+  currentStatus:string
 }) {
-  const invoices = await fetchFilteredInvoices(query, currentPage);
+  const invoices = await fetchFilteredInvoices(query, currentPage,currentStatus);
 
   return (
     <div className="mt-6 flow-root">
+      <div>
+        <InvoiceTabs currentStatus={currentStatus} />
+      </div>
       <div className="inline-block min-w-full align-middle">
         <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
           <div className="md:hidden">
