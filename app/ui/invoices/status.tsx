@@ -4,9 +4,9 @@ import { useState,startTransition } from 'react';
 import { CheckIcon, ClockIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { updateInvoiceStatus, State } from '@/app/lib/actions';
 import { useActionState } from 'react';
+import {StatusKey} from '@/app/lib/definitions'
 
-
-const InvoiceStatus = ({ id, currentStatus }: { id?: string; currentStatus: string }) => {
+const InvoiceStatus = ({ id, currentStatus }: { id?: string; currentStatus: StatusKey }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const statuses = {
@@ -22,10 +22,15 @@ const InvoiceStatus = ({ id, currentStatus }: { id?: string; currentStatus: stri
   const otherStatuses = Object.fromEntries(
     Object.entries(statuses.list).filter(([key, value]) => key !== currentStatus)
   );
-  const initialState: State = { message: null, errors: {} };
-  const updateInvoiceWithId = updateInvoiceStatus.bind(null, id); 
-  const [state, formAction] = useActionState(updateInvoiceWithId,initialState);
-  
+  const initialState = { message: '', errors: {} } as State;
+  const updateInvoiceWithId = updateInvoiceStatus.bind(null, id as string); 
+  const [state, formAction] = useActionState(
+    updateInvoiceWithId, 
+    {
+      message: initialState.message ?? '',
+      errors: initialState.errors
+    }
+  );
   const handleStatusChange = (newStatus: string) => {
     if(newStatus === 'overdue'){
       newStatus = 'pending'
