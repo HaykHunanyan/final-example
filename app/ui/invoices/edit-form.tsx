@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { Button } from '@/app/ui/button';
 import { updateInvoice, State } from '@/app/lib/actions';
 import { useActionState } from 'react';
+// import { useSession } from 'next-auth/react';
 
 export default function EditInvoiceForm({
   invoice,
@@ -19,9 +20,12 @@ export default function EditInvoiceForm({
   invoice: InvoiceForm;
   customers: CustomerField[];
 }) {
+  // const { data: session } = useSession(); 
   const initialState: State = { message: null, errors: {} };
   const updateInvoiceWithId = updateInvoice.bind(null, invoice.id);
   const [state, formAction] = useActionState(updateInvoiceWithId, initialState);
+  // const userEmail = session?.user?.email;
+
 
   return (
     <form action={formAction}>
@@ -131,6 +135,22 @@ export default function EditInvoiceForm({
                   Paid <CheckIcon className="h-4 w-4" />
                 </label>
               </div>
+              <div className="flex items-center">
+                <input
+                  id="canceled"
+                  name="status"
+                  type="radio"
+                  value="canceled"
+                  defaultChecked={invoice.status === 'canceled'}
+                  className="h-4 w-4 border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
+                />
+                <label
+                  htmlFor="paid"
+                  className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-green-500 px-3 py-1.5 text-xs font-medium text-white"
+                >
+                  Canceled <CheckIcon className="h-4 w-4" />
+                </label>
+              </div>
             </div>
           </div>
           <div id="status-error" aria-live="polite" aria-atomic="true">
@@ -142,7 +162,19 @@ export default function EditInvoiceForm({
               ))}
           </div>
         </fieldset>
-
+        {/* <div className="mb-4">
+          <label htmlFor="email" className="mb-2 block text-sm font-medium">
+            Your Email
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            defaultValue={userEmail || ''}
+            disabled
+            className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+          />
+        </div> */}
         <div aria-live="polite" aria-atomic="true">
           {state.message ? (
             <p className="my-2 text-sm text-red-500">{state.message}</p>
